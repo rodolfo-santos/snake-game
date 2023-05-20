@@ -2,7 +2,7 @@
 
 This is a classic Snake game developed using HTML, CSS, and JavaScript. The objective of the game is to control the snake and eat apples to grow longer without colliding with the game boundaries or the snake's own body.
 
-![Snake Game banner](banner.png)
+![Snake Game banner](/banner.gif)
 
 ## How to Play
 
