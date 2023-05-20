@@ -1,0 +1,11 @@
+{
+  "name": "snake-game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "author": "rodolfo-santos",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

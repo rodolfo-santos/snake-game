@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Snake Game</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background: linear-gradient(135deg, #0e1a40, #031b4e);
+        flex-flow: column;
+        font-family: Arial, sans-serif;
+        color: #fff;
+      }
+
+      canvas {
+        border: 1px solid #333;
+        background-color: #fff;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      h1 {
+        font-size: 40px;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+      }
+
+      p {
+        font-size: 18px;
+        margin-bottom: 10px;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+      }
+
+      .score {
+        font-size: 24px;
+        margin-top: 10px;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+      }
+
+      .button-container {
+        margin-top: 20px;
+      }
+
+      .button-container button {
+        font-size: 16px;
+        padding: 10px 20px;
+        background-color: #75b79e;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .gameover {
+        font-size: 30px;
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Snake Game</h1>
+    <canvas id="myCanvas" width="600" height="600"></canvas>
+    <p>Use arrows to move the snake</p>
+    <div class="score" id="score">Score: 0</div>
+
+    <div class="button-container">
+      <button onclick="restartGame()">Restart</button>
+    </div>
+
+    <audio id="eatSound">
+      <source src="eatSound.wav" type="audio/wav" />
+    </audio>
+
+    <audio id="collisionSound">
+      <source src="collisionSound.wav" type="audio/wav" />
+    </audio>
+
+    <script>
+      var canvas = document.getElementById("myCanvas");
+      var context = canvas.getContext("2d");
+
+      var gridSize = 20;
+      var snake = [{ x: 0, y: 0 }];
+      var direction = "right";
+      var apple = { x: 200, y: 200 };
+      var score = 0;
+      var gameover = false;
+      var snakeSpeed = 150; // Speed in milliseconds
+
+      var eatSound = document.getElementById("eatSound");
+      var collisionSound = document.getElementById("collisionSound");
+
+      function drawSnake() {
+        snake.forEach(function (segment) {
+          context.beginPath();
+          context.rect(segment.x, segment.y, gridSize, gridSize);
+          context.fillStyle = "#75b79e";
+          context.fill();
+          context.strokeStyle = "#333";
+          context.stroke();
+          context.closePath();
+        });
+      }
+
+      function drawApple() {
+        context.beginPath();
+        context.rect(apple.x, apple.y, gridSize, gridSize);
+        context.fillStyle = "#ff6464";
+        context.fill();
+        context.strokeStyle = "#333";
+        context.stroke();
+        context.closePath();
+      }
+
+      function updateSnakePosition() {
+        var head = { x: snake[0].x, y: snake[0].y };
+
+        if (direction === "right") head.x += gridSize;
+        if (direction === "left") head.x -= gridSize;
+        if (direction === "up") head.y -= gridSize;
+        if (direction === "down") head.y += gridSize;
+
+        // Verify if snake is out of canvas
+        if (head.x >= canvas.width) head.x = 0;
+        if (head.x < 0) head.x = canvas.width - gridSize;
+        if (head.y >= canvas.height) head.y = 0;
+        if (head.y < 0) head.y = canvas.height - gridSize;
+
+        snake.unshift(head);
+
+        if (head.x === apple.x && head.y === apple.y) {
+          score++;
+          eatSound.play();
+          generateApple();
+        } else {
+          snake.pop();
+        }
+
+        if (checkCollision(head)) {
+          gameover = true;
+          collisionSound.play();
+        }
+      }
+
+      function generateApple() {
+        var maxX = canvas.width - gridSize;
+        var maxY = canvas.height - gridSize;
+
+        apple.x = Math.floor((Math.random() * maxX) / gridSize) * gridSize;
+        apple.y = Math.floor((Math.random() * maxY) / gridSize) * gridSize;
+
+        if (checkCollision(apple)) {
+          generateApple();
+        }
+      }
+
+      function checkCollision(position) {
+        return snake.some(function (segment, index) {
+          if (index === 0) return false;
+          return segment.x === position.x && segment.y === position.y;
+        });
+      }
+
+      function drawScore() {
+        var scoreElement = document.getElementById("score");
+        scoreElement.textContent = "Score: " + score;
+      }
+
+      function changeDirection(event) {
+        var key = event.keyCode;
+
+        if (key === 37 && direction !== "right") direction = "left";
+        if (key === 38 && direction !== "down") direction = "up";
+        if (key === 39 && direction !== "left") direction = "right";
+        if (key === 40 && direction !== "up") direction = "down";
+      }
+
+      function gameLoop() {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (!gameover) {
+          drawSnake();
+          drawApple();
+          updateSnakePosition();
+          drawScore();
+          setTimeout(gameLoop, snakeSpeed); // update snake position
+        } else {
+          context.font = "30px Arial";
+          context.fillStyle = "#333";
+          context.fillText(
+            "Game Over",
+            canvas.width / 2 - 80,
+            canvas.height / 2
+          );
+        }
+      }
+
+      function restartGame() {
+        snake = [{ x: 0, y: 0 }];
+        direction = "right";
+        apple = { x: 200, y: 200 };
+        score = 0;
+        gameover = false;
+        drawScore();
+        generateApple();
+        gameLoop();
+      }
+
+      document.addEventListener("keydown", changeDirection);
+
+      generateApple();
+      gameLoop();
+    </script>
+  </body>
+</html>
